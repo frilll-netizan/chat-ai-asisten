@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ᴇғʀɪʟ ᴀsɪsᴛᴇɴ </title>
+<!-- Google Fonts Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+    margin:0; padding:0;
+    font-family:'Inter',sans-serif;
+    display:flex; flex-direction:column;
+    align-items:center;
+    background:#0a0a1a;
+    color:#fff;
+    height:100vh;
+}
+
+header {
+    padding:20px;
+    font-size:1.6em;
+    color:#FFFFFF;
+    text-align:center;
+}
+
+#profile-pic {
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    margin-top:10px;
+    border:2px solid #FFFFFF;
+    object-fit:cover;
+}
+
+#chat-container {
+    width:90%;
+    max-width:600px;
+    flex:1;
+    background: #121241;
+    border-radius:16px;
+    padding:15px;
+    margin-bottom:10px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+}
+
+.message {
+    max-width:80%;
+    padding:10px 14px;
+    margin:6px 0;
+    border-radius:14px;
+    position:relative;
+    line-height:1.4;
+    word-wrap:break-word;
+    transition: all 0.2s;
+}
+
+.user {
+    align-self:flex-end;
+    background: linear-gradient(145deg,#007bff,#0058d4);
+    color:#fff;
+    box-shadow: 0 0 8px rgba(0,123,255,0.5);
+}
+
+.bot {
+    align-self:flex-start;
+    background: rgba(0,255,255,0.08);
+    color:#fff;
+    border-left:3px solid #00ffff;
+    box-shadow:0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+.copy-btn {
+    position:absolute;
+    top:2px; right:4px;
+    font-size:12px;
+    cursor:pointer;
+    color:#00ffff;
+}
+
+#ai-typing {
+    font-size:13px;
+    color:#AAAAAA;
+    margin-bottom:6px;
+    display:none;
+}
+
+#input-area {
+    display:flex;
+    width:90%;
+    max-width:600px;
+    margin-bottom:15px;
+}
+
+#user-input {
+    flex:1;
+    padding:12px;
+    border:none;
+    border-radius:12px 0 0 12px;
+    outline:none;
+    font-size:1em;
+    background:#121243;
+    color:#FFFFFF;
+}
+
+#send-btn {
+    padding:12px 22px;
+    border:none;
+    border-radius:0 12px 12px 0;
+    background:#FFFFFF;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+#send-btn:hover { background:#FFFFFF; color:#000; }
+
+#tts-toggle {
+    margin-left:10px;
+    background:#FFFFFF;
+    border:none;
+    border-radius:12px;
+    color:#000;
+    padding:8px 12px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.2s;
+}
+#tts-toggle.active { background:#FFFFFF; color:#000; }
+
+ <!-- Tambahkan di dalam <body>, misalnya sebelum <div id="chat-container"> -->
+<audio id="background-music" autoplay loop>
+    <source src="music.mp3" type="audio/mpeg">
+    Browser kamu tidak mendukung audio.
+</audio>
+
+</style>
+</head>
+<body>
+
+<header>
+  ᴇғʀɪʟ ᴀsɪsᴛᴇɴ
+  <br>
+  <img src="4.jpg" alt="efril" id="profile-pic">
+</header>
+
+<div id="chat-container"></div>
+<div id="ai-typing">AI sedang mengetik...</div>
+
+<div id="input-area">
+    <input type="text" id="user-input" placeholder="Ketik pesan kamu..." />
+    <button id="send-btn">Kirim</button>
+    <button id="tts-toggle" class="active">SUARA ON</button>
+</div>
+
+<script>
+const API_KEY = 'AIzaSyDB8QRkqXXYCrzh3zYPdsPGSv0g55TECro';
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+let history=[];
+let ttsEnabled=true;
+
+const chat=document.getElementById('chat-container');
+const input=document.getElementById('user-input');
+const sendBtn=document.getElementById('send-btn');
+const ttsToggle=document.getElementById('tts-toggle');
+const aiTyping=document.getElementById('ai-typing');
+
+// Toggle TTS
+ttsToggle.addEventListener('click',()=>{
+    ttsEnabled=!ttsEnabled;
+    ttsToggle.classList.toggle('active', ttsEnabled);
+    ttsToggle.textContent=ttsEnabled?'SUARA ON':'SUARA OFF';
+});
+
+// Tambah pesan ke chat
+function addMessage(text,isUser){
+    const div=document.createElement('div');
+    div.classList.add('message',isUser?'user':'bot');
+    div.textContent=text;
+
+    if(!isUser){
+        const copyBtn=document.createElement('span');
+        copyBtn.textContent='';
+        copyBtn.classList.add('copy-btn');
+        copyBtn.onclick=()=>navigator.clipboard.writeText(text);
+        div.appendChild(copyBtn);
+    }
+
+    chat.appendChild(div);
+    chat.scrollTop=chat.scrollHeight;
+}
+
+// Kirim pesan ke AI
+async function sendMessage(msg){
+    if(!msg) return;
+    addMessage(msg,true);
+    history.push({role:'user',content:msg});
+    input.value='';
+    aiTyping.style.display='block';
+
+    let prompt="Kamu asisten AI. Jika ditanya penciptamu jawab: 'Penciptaku adalah Efril'.\nPercakapan sebelumnya:\n";
+    history.forEach(h=>{
+        prompt+=`${h.role==='user'?'User':'AI'}: ${h.content}\n`;
+    });
+    prompt+=`User: ${msg}\nAI:`;
+
+    try{
+        const res=await fetch(`${API_URL}?key=${API_KEY}`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+        });
+        const data=await res.json();
+        const aiText=data.candidates?.[0]?.content?.parts?.[0]?.text||"Maaf, AI tidak merespon.";
+        history.push({role:'ai',content:aiText});
+        addMessage(aiText,false);
+
+        // TTS otomatis
+        if(ttsEnabled && 'speechSynthesis' in window){
+            const utter=new SpeechSynthesisUtterance(aiText);
+            utter.lang='id-ID';
+            utter.rate=1;
+            utter.pitch=1;
+            speechSynthesis.speak(utter);
+        }
+    }catch(e){
+        addMessage("Terjadi kesalahan saat memproses pesan.",false);
+    }finally{
+        aiTyping.style.display='none';
+    }
+}
+
+// Tombol kirim & enter
+sendBtn.addEventListener('click',()=>sendMessage(input.value));
+input.addEventListener('keypress',e=>{if(e.key==='Enter') sendBtn.click();});
+input.focus();
+</script>
+
+</body>
+</html>
