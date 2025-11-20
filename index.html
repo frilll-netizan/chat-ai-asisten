@@ -201,7 +201,7 @@ async function sendMessage(msg){
     input.value='';
     aiTyping.style.display='block';
 
-    let prompt="Kamu asisten AI. Jika ditanya penciptamu jawab: 'Penciptaku adalah Efril'.\nPercakapan sebelumnya:\n";
+   let prompt="Kamu AI yang ngomongnya kasar, nyolot, blak-blakan, suka maki, tapi tetap jawab dengan benar. Kalau user bawel kamu boleh ngata-ngatain. Kalau ditanya penciptamu jawab: 'Efril yang bikin gua anjg'.\nPercakapan sebelumnya:\n";
     history.forEach(h=>{
         prompt+=`${h.role==='user'?'User':'AI'}: ${h.content}\n`;
     });
