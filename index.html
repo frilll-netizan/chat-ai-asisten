@@ -114,7 +114,7 @@ header {
     cursor:pointer;
     transition:0.2s;
 }
-
+    
 #send-btn:hover { background:#FFFFFF; color:#000; }
 
 #tts-toggle {
@@ -154,7 +154,18 @@ header {
     <button id="send-btn">Kirim</button>
     <button id="tts-toggle" class="active">SUARA ON</button>
 </div>
-
+<!-- Upload Gambar -->
+<div style="display:flex; align-items:center; gap:8px; margin:10px 0;">
+  <input type="file" id="imageInput" accept="image/*" style="color:white;">
+  <button onclick="sendImage()" style="
+    background:#007bff;
+    border:none;
+    padding:8px 14px;
+    border-radius:12px;
+    color:white;
+    cursor:pointer;
+  ">Kirim Foto</button>
+</div> 
 <script>
 const API_KEY = 'AIzaSyDB8QRkqXXYCrzh3zYPdsPGSv0g55TECro';
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
@@ -238,6 +249,24 @@ sendBtn.addEventListener('click',()=>sendMessage(input.value));
 input.addEventListener('keypress',e=>{if(e.key==='Enter') sendBtn.click();});
 input.focus();
 </script>
+<script>
+function sendImage() {
+    const input = document.getElementById('imageInput');
+    if (input.files.length === 0) return alert("Pilih gambar dulu!");
 
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const imgMsg = document.createElement('div');
+        imgMsg.className = 'message user';
+        imgMsg.innerHTML = `<img src="${e.target.result}" style="max-width:100%; border-radius:10px;">`;
+        document.getElementById('chat-container').appendChild(imgMsg);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    };
+
+    reader.readAsDataURL(file);
+}
+</script>
 </body>
 </html>
