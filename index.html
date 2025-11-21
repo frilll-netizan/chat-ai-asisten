@@ -1,10 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ᴇғʀɪʟ ᴀsɪsᴛᴇɴ </title>
-<!-- Google Fonts Inter -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 body {
@@ -130,12 +129,6 @@ header {
 }
 #tts-toggle.active { background:#FFFFFF; color:#000; }
 
- <!-- Tambahkan di dalam <body>, misalnya sebelum <div id="chat-container"> -->
-<audio id="background-music" autoplay loop>
-    <source src="music.mp3" type="audio/mpeg">
-    Browser kamu tidak mendukung audio.
-</audio>
-
 </style>
 </head>
 <body>
@@ -144,8 +137,7 @@ header {
   ᴇғʀɪʟ ᴀsɪsᴛᴇɴ
   <br>
   <img src="4.jpg" alt="efril" id="profile-pic">
-</header>
-
+</header> 
 <div id="chat-container"></div>
 <div id="ai-typing">sabar kontol lagi ngetik..</div>
 
@@ -154,12 +146,7 @@ header {
     <button id="send-btn">Kirim</button>
     <button id="tts-toggle" class="active">SUARA ON</button>
 </div>
- 
-<div style="width:90%;max-width:600px;margin-bottom:15px;display:flex;gap:10px;">
-    <input type="file" id="image-input" accept="image/*" />
-    <button id="send-image-btn">Kirim Foto</button>
-</div> 
-    
+
 <script>
 const API_KEY = 'AIzaSyDB8QRkqXXYCrzh3zYPdsPGSv0g55TECro';
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
@@ -242,70 +229,6 @@ async function sendMessage(msg){
 sendBtn.addEventListener('click',()=>sendMessage(input.value));
 input.addEventListener('keypress',e=>{if(e.key==='Enter') sendBtn.click();});
 input.focus();
-
-const imageInput = document.getElementById('image-input');
-const sendImageBtn = document.getElementById('send-image-btn');
-
-// convert image to base64
-function toBase64(file){
-    return new Promise((resolve,reject)=>{
-        const reader=new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload=()=>resolve(reader.result.split(',')[1]);
-        reader.onerror=error=>reject(error);
-    });
-}
-
-sendImageBtn.addEventListener('click', async ()=>{
-    const file = imageInput.files[0];
-    if(!file){
-        alert('Pilih foto dulu.');
-        return;
-    }
-
-    addMessage("📷 Foto dikirim", true);
-    aiTyping.style.display='block';
-
-    try{
-        const base64Image = await toBase64(file);
-
-        const res = await fetch(`${API_URL}?key=${API_KEY}`,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({
-                contents:[{
-                    parts:[
-                        {text:"Analisa foto ini secara detail dan jelaskan isinya."},
-                        {
-                            inlineData:{
-                                mimeType:file.type,
-                                data:base64Image
-                            }
-                        }
-                    ]
-                }]
-            })
-        });
-
-        const data = await res.json();
-        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Gagal membaca foto.";
-
-        addMessage(aiText,false);
-
-        if(ttsEnabled && 'speechSynthesis' in window){
-            const utter = new SpeechSynthesisUtterance(aiText);
-            utter.lang='id-ID';
-            speechSynthesis.speak(utter);
-        }
-
-    }catch(err){
-        addMessage("Error saat memproses foto.", false);
-    }finally{
-        aiTyping.style.display='none';
-        imageInput.value='';
-    }
-});
-    
 </script>
 </body>
 </html>
