@@ -203,7 +203,7 @@ async function sendMessage(msg){
     history.forEach(h=>{
         prompt+=`${h.role==='user'?'User':'AI'}: ${h.content}\n`;
     });
-    prompt+=`User: ${msg}\nAI:`;
+    prompt+=`User: ${msg}\n`;
 
     try{
         const res=await fetch(`${API_URL}?key=${API_KEY}`,{
