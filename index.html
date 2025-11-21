@@ -139,7 +139,18 @@ header {
 </style>
 </head>
 <body>
-
+<!-- FITUR KIRIM FOTO AI -->
+<div id="input-area" style="display:flex; align-items:center; gap:6px; width:90%; max-width:600px; margin-bottom:10px;">
+    <input type="file" id="imageInput" accept="image/*" style="color:white;">
+    <button onclick="sendImage()" style="
+        background:#007bff;
+        border:none;
+        padding:8px 12px;
+        border-radius:10px;
+        color:white;
+        cursor:pointer;
+    ">Kirim Foto</button>
+</div>
 <header>
   ᴇғʀɪʟ ᴀsɪsᴛᴇɴ
   <br>
@@ -154,18 +165,7 @@ header {
     <button id="send-btn">Kirim</button>
     <button id="tts-toggle" class="active">SUARA ON</button>
 </div>
-<!-- Upload Gambar -->
-<div style="display:flex; align-items:center; gap:8px; margin:10px 0;">
-  <input type="file" id="imageInput" accept="image/*" style="color:white;">
-  <button onclick="sendImage()" style="
-    background:#007bff;
-    border:none;
-    padding:8px 14px;
-    border-radius:12px;
-    color:white;
-    cursor:pointer;
-  ">Kirim Foto</button>
-</div> 
+
 <script>
 const API_KEY = 'AIzaSyDB8QRkqXXYCrzh3zYPdsPGSv0g55TECro';
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
@@ -244,29 +244,72 @@ async function sendMessage(msg){
     }
 }
 
-// Tombol kirim & enter
+<script>
+const API_KEY = "AIzaSyDB8QRkqXXYCrzh3zYPdsPGSv0g55TECro";
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
+
+async function sendImage() {
+    const input = document.getElementById("imageInput");
+    if (!input.files.length) {
+        alert("Pilih foto dulu!");
+        return;
+    }
+
+    const file = input.files[0];
+
+    // tampilkan gambar di chat
+    const reader = new FileReader();
+    reader.onload = e => {
+        const chat = document.getElementById("chat-container");
+        const imgMsg = document.createElement("div");
+        imgMsg.className = "message user";
+        imgMsg.innerHTML = `<img src="${e.target.result}" style="max-width:200px;border-radius:10px;">`;
+        chat.appendChild(imgMsg);
+        chat.scrollTop = chat.scrollHeight;
+    };
+    reader.readAsDataURL(file);
+
+    // ubah jadi base64
+    const base64 = await new Promise(resolve => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result.split(",")[1]);
+        fr.readAsDataURL(file);
+    });
+
+    // kirim ke GEMINI
+    const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [
+                    { text: "Baca dan jawab soal yang ada di gambar ini" },
+                    {
+                        inlineData: {
+                            mimeType: file.type,
+                            data: base64
+                        }
+                    }
+                ]
+            }]
+        })
+    });
+
+    const data = await response.json();
+    const hasil = data.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak bisa membaca gambar.";
+
+    const botMsg = document.createElement("div");
+    botMsg.className = "message bot";
+    botMsg.textContent = hasil;
+    document.getElementById("chat-container").appendChild(botMsg);
+} 
+    
+// Tombol kirim & enter      
 sendBtn.addEventListener('click',()=>sendMessage(input.value));
 input.addEventListener('keypress',e=>{if(e.key==='Enter') sendBtn.click();});
 input.focus();
-</script>
-<script>
-function sendImage() {
-    const input = document.getElementById('imageInput');
-    if (input.files.length === 0) return alert("Pilih gambar dulu!");
-
-    const file = input.files[0];
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-        const imgMsg = document.createElement('div');
-        imgMsg.className = 'message user';
-        imgMsg.innerHTML = `<img src="${e.target.result}" style="max-width:100%; border-radius:10px;">`;
-        document.getElementById('chat-container').appendChild(imgMsg);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    };
-
-    reader.readAsDataURL(file);
-}
 </script>
 </body>
 </html>
